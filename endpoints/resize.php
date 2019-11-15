@@ -61,7 +61,7 @@ imagecopyresampled($image_p, $image, 0, 0, 0, 0, $width, $height, $width_orig, $
 
 // Output
 if($isJpeg){
-	imagejpeg($image_p, null, 100);
+	imagejpeg($image_p, null, 80);
 }
 
 if($isPng){

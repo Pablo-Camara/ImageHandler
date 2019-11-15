@@ -12,6 +12,12 @@ window._ImageHandler = {
 			'max_height': maxHeight
 		};
 	},
+	Queue: function(ext,screenWidth,maxWidth,maxHeight,fetchUrl,relativeFetchUrlPath){
+		return {
+				endpoint: window._ImageHandler.queueEndpoint(),
+				postStr: 'extension=' + ext + '&screen_width='+screenWidth+'&max_width=' + maxWidth + '&max_height=' + maxHeight  + '&fetch_url=' + fetchUrl + '&relative_fetch_url_path=' + relativeFetchUrlPath 
+		};
+	},
 	fetchImages: function(){
 		const pageImages = document.getElementsByTagName('img');
 		
@@ -38,10 +44,7 @@ window._ImageHandler = {
 			const imgRelativePath = img.relative_path;
 			const ext = fileExtension(imgUrl);
 			const screenWidth = screen.availWidth;
-			images.push({
-				endpoint: window._ImageHandler.queueEndpoint(),
-				postStr: 'extension=' + ext + '&screen_width='+screenWidth+'&max_width=' + img['max_width']+ '&max_height=' + img['max_height']  + '&fetch_url=' + imgUrl + '&relative_fetch_url_path=' + imgRelativePath 
-			});
+			images.push(window._ImageHandler.Queue(ext,screenWidth,img['max_width'],img['max_height'],imgUrl,imgRelativePath));
 		}
 		
 		return images;
@@ -54,6 +57,35 @@ window._ImageHandler = {
 				false/*default contenType*/,
 				imagesToQueue[i].postStr
 			);
+		}
+	},
+	queueImageByImage: function(){
+		const pageImages = document.getElementsByTagName('img');
+		
+		window._ImageHandler._images = [];
+		
+		for(var i = 0; i < pageImages.length; i++){
+			pageImages[i].onclick = function(){
+				
+				const fileExtension = function( url ) {
+					return url.split('.').pop().split(/\#|\?/)[0];
+				}
+		
+				var img = this;
+				img = window._ImageHandler.Image(img.src,img.getAttribute('src'),img.width,img.height);
+				const imgUrl = img.fetch_url;
+				const imgRelativePath = img.relative_path;
+				const ext = fileExtension(imgUrl);
+				const screenWidth = screen.availWidth;
+				const imageToQueue = window._ImageHandler.Queue(ext,screenWidth,img.max_width,img.max_height,img.fetch_url,img.relative_path);
+				window._ImageHandler.API.simplePost(
+					imageToQueue.endpoint,
+					false/*default contenType*/,
+					imageToQueue.postStr
+				);
+				
+				alert('Image queued: ' + img.fetch_url);
+			};
 		}
 	},
 	downloadResized: function(){
